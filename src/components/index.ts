@@ -1,5 +1,2 @@
-export * from './select'
-export * from './button'
-export * from './textarea'
-export * from './input'
-export * from './table'
+export * from './ui'
+export * from './pages'

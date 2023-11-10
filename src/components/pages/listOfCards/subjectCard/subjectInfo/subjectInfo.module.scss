@@ -1,0 +1,17 @@
+.subjectInfo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  .block {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 200px;
+    .name {
+      color: #191970;
+    }
+    .count {
+      color: #808080;
+    }
+  }
+}
