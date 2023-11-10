@@ -10,7 +10,6 @@
 }
 
 .th {
-  cursor: pointer;
   padding: 6px 24px;
   border-bottom: 2px solid #191970;
   &:not(:last-child) {
@@ -20,7 +19,11 @@
 
 .td {
   padding: 6px 24px;
+  border-bottom: 1px solid #dcdcdc;
   &:not(:last-child) {
     border-right: 1px solid #dcdcdc;
+  }
+  &:nth-child(odd) {
+    background-color: lavenderblush;
   }
 }

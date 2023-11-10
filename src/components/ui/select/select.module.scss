@@ -33,6 +33,11 @@
     border: 1px solid #6495ed;
     color: #6495ed;
   }
+  &:disabled {
+    pointer-events: none;
+    background-color: #dcdcdc;
+    color: #c0c0c0;
+  }
 }
 
 .selectIcon {

@@ -8,8 +8,8 @@ import { RiArrowDownSLine } from 'react-icons/ri'
 import s from './select.module.scss'
 
 export type Options = {
-  label: string
-  value: string
+  id: string
+  name: string
 }
 
 export type Props = {
@@ -22,8 +22,8 @@ export type Props = {
 export const Select = forwardRef<ElementRef<typeof RadixSelect.Root>, Props>(
   ({ className, disabled, options, placeholder, ...restProps }, ref) => {
     const mappedOptions = options.map(o => (
-      <RadixSelect.Item className={s.selectItem} key={o.value} value={o.value}>
-        <RadixSelect.ItemText>{o.label}</RadixSelect.ItemText>
+      <RadixSelect.Item className={s.selectItem} key={o.id} value={o.id}>
+        <RadixSelect.ItemText>{o.name}</RadixSelect.ItemText>
       </RadixSelect.Item>
     ))
 
