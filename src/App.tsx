@@ -1,3 +1,5 @@
+import { ListOfCards } from '@/components'
+
 export function App() {
-  return <div>Hello</div>
+  return <ListOfCards />
 }

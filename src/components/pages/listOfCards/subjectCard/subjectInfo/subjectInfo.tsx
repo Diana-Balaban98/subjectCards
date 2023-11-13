@@ -27,8 +27,8 @@ export const SubjectInfo: FunctionComponent<SubjectInfoProps> = ({
   return (
     <div className={s.subjectInfo}>
       {renderBlock('Группа', groupName)}
-      {renderBlock('Количество курсантов', studentsCount)}
       {renderBlock('Курс', course)}
+      {renderBlock('Количество курсантов', studentsCount)}
       {renderBlock('Семестр', semester)}
     </div>
   )

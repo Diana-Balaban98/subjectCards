@@ -1,5 +1,6 @@
 import { FunctionComponent } from 'react'
 
+import { Subgroups, Teachers } from '@/api'
 import {
   Button,
   Select,
@@ -12,50 +13,101 @@ import {
   TableRow,
   Textarea,
 } from '@/components'
-import data from '@/data.json'
+import { useAppDispatch } from '@/hooks'
+import { setIdTeacher, updateAllTeachers } from '@/state'
 import { AiOutlinePlus } from 'react-icons/ai'
+import { BiCollection } from 'react-icons/bi'
 
 import s from './subjectCard.module.scss'
 
 type SubjectCardProps = {
-  additionalInfo: string
+  cardId: string
   course: string
   exam: boolean
   groupName: string
   laboratoryHours: string
   lecturesHours: string
   offset: boolean
+  podgroups: Subgroups[]
   practiceHours: string
   semester: string
   seminarHours: string
   studentsCount: string
   subjectName: string
+  teachers: Teachers[]
 }
 
 export const SubjectСard: FunctionComponent<SubjectCardProps> = props => {
-  const { course, exam, groupName, offset, semester, studentsCount, subjectName, ...restProps } =
-    props
+  const {
+    cardId,
+    course,
+    exam,
+    groupName,
+    laboratoryHours,
+    lecturesHours,
+    offset,
+    podgroups,
+    practiceHours,
+    semester,
+    seminarHours,
+    studentsCount,
+    subjectName,
+    teachers,
+    ...restProps
+  } = props
 
-  const renderTableRow = (label: string, value: string, selectEnabled: boolean) => (
-    <TableRow>
-      <TableCell>{label}</TableCell>
-      <TableCell>{value}</TableCell>
-      <TableCell>
-        <Select disabled={!selectEnabled} options={data['teachers']} placeholder={'Вакансия'} />
-      </TableCell>
-    </TableRow>
-  )
+  const dispatch = useAppDispatch()
+  const nameOfSelect: Record<string, string> = {
+    Зачёт: 'offsetTeacher',
+    'Лабораторные работы': 'laboratoryTeacher',
+    Лекции: 'lectureTeacher',
+    'Практические работы': 'practiceTeacher',
+    'Семинарские работы': 'seminarTeacher',
+    Экзамен: 'examTeacher',
+  }
 
-  const classNames = {
-    count: s.count,
-    name: s.name,
-    subjectInfo: s.subjectInfo,
-    subjectTitle: s.subjectTitle,
-    wrapperCard: s.wrapperCard,
+  const valuesForTeachers = [{ id: '9', name: 'Вакансия' }, ...teachers]
+
+  const selectTeacher = (idCard: string, teacherId: string, label: string) => {
+    dispatch(setIdTeacher(idCard, teacherId, label))
+  }
+
+  const renderTableRow = (
+    label: string,
+    value: string,
+    selectEnabled: boolean,
+    podgroup: string,
+    btn?: boolean
+  ) => {
+    const selectTeacherHandler = (value: string) => {
+      selectTeacher(cardId, value, nameOfSelect[label])
+    }
+    const updateAllTeachersHandler = () => {
+      dispatch(updateAllTeachers(cardId, '10', nameOfSelect[label]))
+    }
+
+    return (
+      <TableRow>
+        <TableCell>{label}</TableCell>
+        <TableCell>{value}</TableCell>
+        <Select
+          defaultValue={'9'}
+          disabled={selectEnabled}
+          onValueChange={selectTeacherHandler}
+          options={valuesForTeachers}
+          value={podgroup ? podgroup : '9'}
+        />
+        {btn && (
+          <Button onClick={updateAllTeachersHandler} variant={'contained'}>
+            <BiCollection />
+          </Button>
+        )}
+      </TableRow>
+    )
   }
 
   return (
-    <div className={classNames.wrapperCard}>
+    <div className={s.wrapperCard} {...restProps}>
       <SubjectTitle subjectName={subjectName} />
       <SubjectInfo
         course={course}
@@ -81,12 +133,33 @@ export const SubjectСard: FunctionComponent<SubjectCardProps> = props => {
         />
         <TableBody>
           <>
-            {renderTableRow('Лекции', restProps.lecturesHours, true)}
-            {renderTableRow('Лабораторные работы', restProps.laboratoryHours, false)}
-            {renderTableRow('Практические работы', restProps.practiceHours, true)}
-            {renderTableRow('Семинарские работы', restProps.seminarHours, false)}
-            {offset && renderTableRow('Зачёт', '', true)}
-            {exam && renderTableRow('Экзамен', '', true)}
+            {renderTableRow(
+              'Лекции',
+              lecturesHours,
+              !+lecturesHours,
+              podgroups[0].lectureTeacher,
+              true
+            )}
+            {renderTableRow(
+              'Лабораторные работы',
+              laboratoryHours,
+              !+laboratoryHours,
+              podgroups[0].laboratoryTeacher
+            )}
+            {renderTableRow(
+              'Практические работы',
+              practiceHours,
+              !+practiceHours,
+              podgroups[0].practiceTeacher
+            )}
+            {renderTableRow(
+              'Семинарские работы',
+              seminarHours,
+              !+seminarHours,
+              podgroups[0].seminarTeacher
+            )}
+            {offset && renderTableRow('Зачёт', '', false, podgroups[0].offsetTeacher)}
+            {exam && renderTableRow('Экзамен', '', false, podgroups[0].examTeacher)}
             <TableRow>
               <TableCell>Примечание (для составления примечания)</TableCell>
               <TableCell></TableCell>

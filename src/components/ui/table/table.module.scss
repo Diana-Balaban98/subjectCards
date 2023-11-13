@@ -9,6 +9,12 @@
   color: #191970;
 }
 
+tbody tr {
+  &:nth-child(odd) {
+    background-color: #f5fffa;
+  }
+}
+
 .th {
   padding: 6px 24px;
   border-bottom: 2px solid #191970;
@@ -22,8 +28,5 @@
   border-bottom: 1px solid #dcdcdc;
   &:not(:last-child) {
     border-right: 1px solid #dcdcdc;
-  }
-  &:nth-child(odd) {
-    background-color: lavenderblush;
   }
 }
