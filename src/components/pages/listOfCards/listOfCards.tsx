@@ -1,18 +1,10 @@
-import { useEffect } from 'react'
-
 import { Button, LinearLoader, SubjectСard } from '@/components'
-import { useAppDispatch, useAppSelector } from '@/hooks'
-import { fetchData } from '@/state'
+import { useAppSelector } from '@/hooks'
 
 import s from './listOfCards.module.scss'
 
 export const ListOfCards = () => {
-  const dispatch = useAppDispatch()
   const { isLoading, subjectInfo } = useAppSelector(state => state.subjectInfo)
-
-  useEffect(() => {
-    dispatch(fetchData())
-  }, [dispatch])
 
   if (isLoading) {
     return <LinearLoader />
@@ -25,9 +17,11 @@ export const ListOfCards = () => {
           <div className={s.subjectCard} key={card.uniqueId}>
             <SubjectСard
               cardId={card.uniqueId}
+              countPodgroups={card.countPodgroups}
               course={card.course}
               exam={card.exam}
               groupName={card.groupName}
+              info={card.additionalInfo}
               laboratoryHours={card.laboratoryHours}
               lecturesHours={card.lecturesHours}
               offset={card.offset}

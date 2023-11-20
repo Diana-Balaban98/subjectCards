@@ -1,8 +1,10 @@
 import { FunctionComponent } from 'react'
+import React from 'react'
 
 import { Subgroups, Teachers } from '@/api'
 import {
   Button,
+  Column,
   Select,
   SubjectInfo,
   SubjectTitle,
@@ -16,15 +18,18 @@ import {
 import { useAppDispatch } from '@/hooks'
 import { setIdTeacher, updateAllTeachers } from '@/state'
 import { AiOutlinePlus } from 'react-icons/ai'
-import { BiCollection } from 'react-icons/bi'
+import { BiCollection, BiTrash } from 'react-icons/bi'
+import { v1 } from 'uuid'
 
 import s from './subjectCard.module.scss'
 
 type SubjectCardProps = {
   cardId: string
+  countPodgroups: string
   course: string
   exam: boolean
   groupName: string
+  info: string
   laboratoryHours: string
   lecturesHours: string
   offset: boolean
@@ -40,9 +45,11 @@ type SubjectCardProps = {
 export const SubjectСard: FunctionComponent<SubjectCardProps> = props => {
   const {
     cardId,
+    countPodgroups,
     course,
     exam,
     groupName,
+    info,
     laboratoryHours,
     lecturesHours,
     offset,
@@ -57,6 +64,16 @@ export const SubjectСard: FunctionComponent<SubjectCardProps> = props => {
   } = props
 
   const dispatch = useAppDispatch()
+
+  // const dataForRenderTableRow = [
+  //   { hours: lecturesHours, label: 'Лекции' },
+  //   { hours: laboratoryHours, label: 'Лабораторные работы' },
+  //   { hours: practiceHours, label: 'Практические' },
+  //   { hours: seminarHours, label: 'Семинарские' },
+  //   { hours: '', label: 'Зачёт' },
+  //   { hours: '', label: 'Экзамен' },
+  // ]
+
   const nameOfSelect: Record<string, string> = {
     Зачёт: 'offsetTeacher',
     'Лабораторные работы': 'laboratoryTeacher',
@@ -69,42 +86,87 @@ export const SubjectСard: FunctionComponent<SubjectCardProps> = props => {
   const valuesForTeachers = [{ id: '9', name: 'Вакансия' }, ...teachers]
 
   const selectTeacher = (idCard: string, teacherId: string, label: string) => {
+    console.log(valuesForTeachers)
     dispatch(setIdTeacher(idCard, teacherId, label))
   }
+
+  const renderColumns = (countPodgroups: string): Column[] => {
+    const columns: Column[] = [
+      { key: v1(), title: 'Занятие' },
+      { key: v1(), title: 'Часы' },
+    ]
+
+    if (Number(countPodgroups) > 1) {
+      for (let i = 1; i <= Number(countPodgroups); i++) {
+        columns.push({ icon: i > 1 ? <BiTrash /> : '', key: v1(), title: `Подгруппа ${i}` })
+      }
+    } else {
+      columns.push({
+        icon:
+          Number(countPodgroups) > 1 ? (
+            <Button>
+              <AiOutlinePlus />
+            </Button>
+          ) : (
+            ''
+          ),
+        key: v1(),
+        title: 'Преподаватель',
+      })
+    }
+
+    return columns
+  }
+
+  const mappedColumns = renderColumns(countPodgroups)
 
   const renderTableRow = (
     label: string,
     value: string,
     selectEnabled: boolean,
-    podgroup: string,
+    podgroupName: string,
     btn?: boolean
   ) => {
-    const selectTeacherHandler = (value: string) => {
-      selectTeacher(cardId, value, nameOfSelect[label])
-    }
     const updateAllTeachersHandler = () => {
-      dispatch(updateAllTeachers(cardId, '10', nameOfSelect[label]))
+      dispatch(updateAllTeachers(cardId, '10', podgroupName))
     }
 
     return (
       <TableRow>
         <TableCell>{label}</TableCell>
         <TableCell>{value}</TableCell>
-        <Select
-          defaultValue={'9'}
-          disabled={selectEnabled}
-          onValueChange={selectTeacherHandler}
-          options={valuesForTeachers}
-          value={podgroup ? podgroup : '9'}
-        />
-        {btn && (
-          <Button onClick={updateAllTeachersHandler} variant={'contained'}>
-            <BiCollection />
-          </Button>
-        )}
+        {podgroups.map((el, i) => {
+          //console.log(`${i} ${typeof el[podgroupsName]}`)
+
+          const selectTeacherHandler = (value: string) => {
+            dispatch(setIdTeacher(cardId, value, podgroupName, i))
+            console.log(el[podgroupName] === '', value, podgroupName, i)
+          }
+
+          return (
+            <TableCell key={i}>
+              <Select
+                disabled={selectEnabled}
+                onValueChange={selectTeacherHandler}
+                //onValueChange={(value: string) => console.log(value)}
+                options={valuesForTeachers}
+                value={el[podgroupName] ? el[podgroupName] : '9'}
+              />
+              {btn && (
+                <Button onClick={updateAllTeachersHandler} variant={'contained'}>
+                  <BiCollection />
+                </Button>
+              )}
+            </TableCell>
+          )
+        })}
       </TableRow>
     )
   }
+
+  // const mappedDataForRenderTableRow = dataForRenderTableRow.map((d, i) => {
+  //   return renderTableRow(d.label, d.hours, !+d.hours, '', i === 0)
+  // })
 
   return (
     <div className={s.wrapperCard} {...restProps}>
@@ -116,55 +178,31 @@ export const SubjectСard: FunctionComponent<SubjectCardProps> = props => {
         studentsCount={studentsCount}
       />
       <Table>
-        <TableHeader
-          columns={[
-            { key: '1', title: 'Занятие' },
-            { key: '2', title: 'Часы' },
-            {
-              icon: (
-                <Button>
-                  <AiOutlinePlus />
-                </Button>
-              ),
-              key: '3',
-              title: 'Преподаватель',
-            },
-          ]}
-        />
+        <TableHeader columns={mappedColumns} />
         <TableBody>
           <>
-            {renderTableRow(
-              'Лекции',
-              lecturesHours,
-              !+lecturesHours,
-              podgroups[0].lectureTeacher,
-              true
-            )}
+            {renderTableRow('Лекции', lecturesHours, !+lecturesHours, 'lectureTeacher', true)}
             {renderTableRow(
               'Лабораторные работы',
               laboratoryHours,
               !+laboratoryHours,
-              podgroups[0].laboratoryTeacher
+              'laboratoryTeacher'
             )}
             {renderTableRow(
               'Практические работы',
               practiceHours,
               !+practiceHours,
-              podgroups[0].practiceTeacher
+              'practiceTeacher'
             )}
-            {renderTableRow(
-              'Семинарские работы',
-              seminarHours,
-              !+seminarHours,
-              podgroups[0].seminarTeacher
-            )}
-            {offset && renderTableRow('Зачёт', '', false, podgroups[0].offsetTeacher)}
-            {exam && renderTableRow('Экзамен', '', false, podgroups[0].examTeacher)}
+            {renderTableRow('Семинарские работы', seminarHours, !+seminarHours, 'seminarTeacher')}
+            {offset && renderTableRow('Зачёт', '', false, 'offsetTeacher')}
+            {exam && renderTableRow('Экзамен', '', false, 'examTeacher')}
+            {/*{mappedDataForRenderTableRow}*/}
             <TableRow>
               <TableCell>Примечание (для составления примечания)</TableCell>
               <TableCell></TableCell>
               <TableCell>
-                <Textarea />
+                <Textarea value={info && info} />
               </TableCell>
             </TableRow>
           </>
