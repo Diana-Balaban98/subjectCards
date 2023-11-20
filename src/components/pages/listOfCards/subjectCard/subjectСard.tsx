@@ -1,9 +1,8 @@
 import { FunctionComponent, useState } from 'react'
 
-import { Subgroups, Teachers } from '@/api'
+import { TSubjectInfo, Teachers } from '@/api'
 import {
   Button,
-  Column,
   Select,
   SubjectInfo,
   SubjectTitle,
@@ -14,135 +13,67 @@ import {
   TableRow,
   Textarea,
 } from '@/components'
+import { renderColumns } from '@/helpers'
 import { useAppDispatch } from '@/hooks'
-import { setIdTeacher, updateAllTeachers } from '@/state'
-import { AiOutlinePlus } from 'react-icons/ai'
-import { BiCollection, BiTrash } from 'react-icons/bi'
-import { v1 } from 'uuid'
+import { removePodgroup, setIdTeacher, updateAllTeachers } from '@/state'
+import { BiCollection } from 'react-icons/bi'
 
 import s from './subjectCard.module.scss'
 
 type SubjectCardProps = {
-  cardId: string
-  countPodgroups: string
-  course: string
-  exam: boolean
-  groupName: string
-  info: string
-  laboratoryHours: string
-  lecturesHours: string
-  offset: boolean
-  podgroups: Subgroups[]
-  practiceHours: string
-  semester: string
-  seminarHours: string
-  studentsCount: string
-  subjectName: string
+  card: TSubjectInfo
   teachers: Teachers[]
 }
 
-export const SubjectСard: FunctionComponent<SubjectCardProps> = props => {
-  const {
-    cardId,
-    countPodgroups,
-    course,
-    exam,
-    groupName,
-    info,
-    laboratoryHours,
-    lecturesHours,
-    offset,
-    podgroups,
-    practiceHours,
-    semester,
-    seminarHours,
-    studentsCount,
-    subjectName,
-    teachers,
-    ...restProps
-  } = props
-
-  const dispatch = useAppDispatch()
-
-  // const dataForRenderTableRow = [
-  //   { hours: lecturesHours, label: 'Лекции' },
-  //   { hours: laboratoryHours, label: 'Лабораторные работы' },
-  //   { hours: practiceHours, label: 'Практические' },
-  //   { hours: seminarHours, label: 'Семинарские' },
-  //   { hours: '', label: 'Зачёт' },
-  //   { hours: '', label: 'Экзамен' },
-  // ]
-
+export const SubjectСard: FunctionComponent<SubjectCardProps> = ({ card, teachers }) => {
   const [lectureTeacherValue, setLectureTeacherValue] = useState('')
+  const dispatch = useAppDispatch()
 
   const valuesForTeachers = [{ id: '9', name: 'Вакансия' }, ...teachers]
 
-  const renderColumns = (countPodgroups: string): Column[] => {
-    const columns: Column[] = [
-      { key: v1(), title: 'Занятие' },
-      { key: v1(), title: 'Часы' },
-    ]
-
-    if (Number(countPodgroups) > 1) {
-      for (let i = 1; i <= Number(countPodgroups); i++) {
-        columns.push({ icon: i > 1 ? <BiTrash /> : '', key: v1(), title: `Подгруппа ${i}` })
-      }
-    } else {
-      columns.push({
-        icon:
-          Number(countPodgroups) > 1 ? (
-            <Button>
-              <AiOutlinePlus />
-            </Button>
-          ) : (
-            ''
-          ),
-        key: v1(),
-        title: 'Преподаватель',
-      })
-    }
-
-    return columns
+  const deletePodgroup = () => {
+    dispatch(removePodgroup(card.uniqueId, 1))
   }
 
-  const mappedColumns = renderColumns(countPodgroups)
-
-  const updateAllTeachersHandler = (indexPodgroup: number) => {
-    dispatch(updateAllTeachers(cardId, lectureTeacherValue, indexPodgroup))
-  }
+  const mappedColumns = renderColumns(card.countPodgroups, deletePodgroup)
 
   const renderTableRow = (
-    label: string,
-    value: string,
+    title: string,
+    countHours: string,
     selectEnabled: boolean,
     podgroupName: string,
-    btn?: boolean
+    isButton?: boolean
   ) => {
     return (
       <TableRow>
-        <TableCell>{label}</TableCell>
-        <TableCell>{value}</TableCell>
-        {podgroups.map((el, i) => {
+        <TableCell>{title}</TableCell>
+        <TableCell>{countHours}</TableCell>
+        {card.podgroups.map((el, index) => {
           //console.log(`${i} ${typeof el[podgroupsName]}`)
 
-          const selectTeacherHandler = (value: string) => {
+          const selectTeacherHandler = (valueId: string) => {
             if (podgroupName === 'lectureTeacher') {
-              setLectureTeacherValue(value)
+              setLectureTeacherValue(valueId)
             }
-            dispatch(setIdTeacher(cardId, value, podgroupName, i))
+            dispatch(setIdTeacher(card.uniqueId, valueId, podgroupName, index))
+            //  console.log(podgroupName, selectEnabled)
+          }
+
+          const updateAllTeachersHandler = (indexPodgroup: number) => {
+            dispatch(updateAllTeachers(card.uniqueId, lectureTeacherValue, indexPodgroup))
           }
 
           return (
-            <TableCell key={i}>
+            <TableCell key={`tableCell-${index}`}>
               <Select
+                className={s.select}
                 disabled={selectEnabled}
                 onValueChange={selectTeacherHandler}
-                //onValueChange={(value: string) => console.log(value)}
                 options={valuesForTeachers}
-                value={el[podgroupName] ? el[podgroupName] : '9'}
+                value={el[podgroupName] ? el[podgroupName] : valuesForTeachers[0].id}
               />
-              {btn && (
-                <Button onClick={() => updateAllTeachersHandler(i)} variant={'contained'}>
+              {isButton && (
+                <Button onClick={() => updateAllTeachersHandler(index)} variant={'contained'}>
                   <BiCollection />
                 </Button>
               )}
@@ -158,40 +89,51 @@ export const SubjectСard: FunctionComponent<SubjectCardProps> = props => {
   // })
 
   return (
-    <div className={s.wrapperCard} {...restProps}>
-      <SubjectTitle subjectName={subjectName} />
+    <div className={s.wrapperCard}>
+      <SubjectTitle subjectName={card.subjectName} />
       <SubjectInfo
-        course={course}
-        groupName={groupName}
-        semester={semester}
-        studentsCount={studentsCount}
+        course={card.course}
+        groupName={card.groupName}
+        semester={card.semestr}
+        studentsCount={card.studentsNumber}
       />
       <Table>
         <TableHeader columns={mappedColumns} />
         <TableBody>
           <>
-            {renderTableRow('Лекции', lecturesHours, !+lecturesHours, 'lectureTeacher', true)}
+            {renderTableRow(
+              'Лекции',
+              card.lecturesHours,
+              !Number(card.lecturesHours),
+              'lectureTeacher',
+              true
+            )}
             {renderTableRow(
               'Лабораторные работы',
-              laboratoryHours,
-              !+laboratoryHours,
+              card.laboratoryHours,
+              !Number(card.laboratoryHours),
               'laboratoryTeacher'
             )}
             {renderTableRow(
-              'Практические работы',
-              practiceHours,
-              !+practiceHours,
+              'Практические',
+              card.practicHours,
+              !Number(card.practicHours),
               'practiceTeacher'
             )}
-            {renderTableRow('Семинарские работы', seminarHours, !+seminarHours, 'seminarTeacher')}
-            {offset && renderTableRow('Зачёт', '', false, 'offsetTeacher')}
-            {exam && renderTableRow('Экзамен', '', false, 'examTeacher')}
+            {renderTableRow(
+              'Семинарские',
+              card.seminarHours,
+              !Number(card.seminarHours),
+              'seminarTeacher'
+            )}
+            {card.offset && renderTableRow('Зачёт', '', false, 'offsetTeacher')}
+            {card.exam && renderTableRow('Экзамен', '', false, 'examTeacher')}
             {/*{mappedDataForRenderTableRow}*/}
             <TableRow>
               <TableCell>Примечание (для составления примечания)</TableCell>
               <TableCell></TableCell>
               <TableCell>
-                <Textarea value={info && info} />
+                <Textarea value={card.additionalInfo && card.additionalInfo} />
               </TableCell>
             </TableRow>
           </>

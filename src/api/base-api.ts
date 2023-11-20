@@ -2,18 +2,18 @@ import axios from 'axios'
 
 export const baseApi = {
   async getSubjectData() {
-    const result = await axios.get<ResponseData>('https://bgaa.by/test')
+    const result = await axios.get<TResponseData>('https://bgaa.by/test')
 
     return result.data
   },
 }
 
-export type ResponseData = {
-  data: SubjectInfo[]
+export type TResponseData = {
+  data: TSubjectInfo[]
   teachers: Teachers[]
 }
 
-type SubjectInfo = {
+export type TSubjectInfo = {
   additionalInfo: string
   countPodgroups: string
   course: string
@@ -22,7 +22,7 @@ type SubjectInfo = {
   laboratoryHours: string
   lecturesHours: string
   offset: boolean
-  podgroups: Subgroups[]
+  podgroups: TSubgroups[]
   practicHours: string
   semestr: string
   seminarHours: string
@@ -31,7 +31,7 @@ type SubjectInfo = {
   uniqueId: string
 }
 
-export type Subgroups = {
+export type TSubgroups = {
   [key: string]: string
 }
 

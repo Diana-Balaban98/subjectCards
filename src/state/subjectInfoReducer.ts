@@ -1,10 +1,10 @@
-import { ResponseData, Subgroups, baseApi } from '@/api'
+import { TResponseData, TSubgroups, baseApi } from '@/api'
 import { AppThunk } from '@/state'
 import { Dispatch } from 'redux'
 
 const SubjectState = {
   isLoading: false,
-  subjectInfo: { data: [], teachers: [] } as ResponseData,
+  subjectInfo: { data: [], teachers: [] } as TResponseData,
 }
 
 export const fetchData = (): AppThunk => async (dispatch: Dispatch) => {
@@ -19,7 +19,7 @@ export const fetchData = (): AppThunk => async (dispatch: Dispatch) => {
   }
 }
 
-const upgradeAllPodgroups = (podgroups: Subgroups[], newValue: string, index: number) => {
+const upgradeAllPodgroups = (podgroups: TSubgroups[], newValue: string, index: number) => {
   const podgroup = podgroups[index]
 
   for (const key in podgroup) {
@@ -29,7 +29,7 @@ const upgradeAllPodgroups = (podgroups: Subgroups[], newValue: string, index: nu
   return [podgroup, ...podgroups]
 }
 
-const setData = (data: ResponseData) => ({
+const setData = (data: TResponseData) => ({
   data,
   type: 'SET-DATA' as const,
 })
@@ -59,7 +59,15 @@ export const updateAllTeachers = (idCard: string, teacherId: string, indexPodgro
     type: 'UPDATE-ALL-TEACHERS',
   }) as const
 
+export const removePodgroup = (idCard: string, indexPodgroup: number) =>
+  ({
+    idCard,
+    indexPodgroup,
+    type: 'REMOVE-PODGROUP',
+  }) as const
+
 type CommonActions =
+  | ReturnType<typeof removePodgroup>
   | ReturnType<typeof setData>
   | ReturnType<typeof setIdTeacher>
   | ReturnType<typeof toggleIsLoading>
@@ -107,11 +115,13 @@ export const subjectInfoReducer = (state = SubjectState, action: CommonActions) 
             if (el.uniqueId === action.idCard) {
               return {
                 ...el,
-                podgroups: upgradeAllPodgroups(
-                  el.podgroups,
-                  action.teacherId,
-                  action.indexPodgroup
-                ),
+                podgroups: el.podgroups.map((subgroup, i) => {
+                  if (i === action.indexPodgroup) {
+                    upgradeAllPodgroups(el.podgroups, action.teacherId, action.indexPodgroup)
+                  }
+
+                  return subgroup
+                }),
               }
             }
 
@@ -119,6 +129,25 @@ export const subjectInfoReducer = (state = SubjectState, action: CommonActions) 
           }),
         },
       }
+    case 'REMOVE-PODGROUP':
+      return {
+        ...state,
+        subjectInfo: {
+          ...state.subjectInfo,
+          data: state.subjectInfo.data.map(el => {
+            if (el.uniqueId === action.idCard) {
+              return {
+                ...el,
+                countPodgroups: String(Number(el.countPodgroups) - 1),
+                podgroups: el.podgroups.splice(action.indexPodgroup, 1),
+              }
+            }
+
+            return el
+          }),
+        },
+      }
+
     default:
       return state
   }
