@@ -1,5 +1,4 @@
-import { FunctionComponent } from 'react'
-import React from 'react'
+import { FunctionComponent, useState } from 'react'
 
 import { Subgroups, Teachers } from '@/api'
 import {
@@ -74,21 +73,9 @@ export const SubjectСard: FunctionComponent<SubjectCardProps> = props => {
   //   { hours: '', label: 'Экзамен' },
   // ]
 
-  const nameOfSelect: Record<string, string> = {
-    Зачёт: 'offsetTeacher',
-    'Лабораторные работы': 'laboratoryTeacher',
-    Лекции: 'lectureTeacher',
-    'Практические работы': 'practiceTeacher',
-    'Семинарские работы': 'seminarTeacher',
-    Экзамен: 'examTeacher',
-  }
+  const [lectureTeacherValue, setLectureTeacherValue] = useState('')
 
   const valuesForTeachers = [{ id: '9', name: 'Вакансия' }, ...teachers]
-
-  const selectTeacher = (idCard: string, teacherId: string, label: string) => {
-    console.log(valuesForTeachers)
-    dispatch(setIdTeacher(idCard, teacherId, label))
-  }
 
   const renderColumns = (countPodgroups: string): Column[] => {
     const columns: Column[] = [
@@ -120,6 +107,10 @@ export const SubjectСard: FunctionComponent<SubjectCardProps> = props => {
 
   const mappedColumns = renderColumns(countPodgroups)
 
+  const updateAllTeachersHandler = (indexPodgroup: number) => {
+    dispatch(updateAllTeachers(cardId, lectureTeacherValue, indexPodgroup))
+  }
+
   const renderTableRow = (
     label: string,
     value: string,
@@ -127,10 +118,6 @@ export const SubjectСard: FunctionComponent<SubjectCardProps> = props => {
     podgroupName: string,
     btn?: boolean
   ) => {
-    const updateAllTeachersHandler = () => {
-      dispatch(updateAllTeachers(cardId, '10', podgroupName))
-    }
-
     return (
       <TableRow>
         <TableCell>{label}</TableCell>
@@ -139,8 +126,10 @@ export const SubjectСard: FunctionComponent<SubjectCardProps> = props => {
           //console.log(`${i} ${typeof el[podgroupsName]}`)
 
           const selectTeacherHandler = (value: string) => {
+            if (podgroupName === 'lectureTeacher') {
+              setLectureTeacherValue(value)
+            }
             dispatch(setIdTeacher(cardId, value, podgroupName, i))
-            console.log(el[podgroupName] === '', value, podgroupName, i)
           }
 
           return (
@@ -153,7 +142,7 @@ export const SubjectСard: FunctionComponent<SubjectCardProps> = props => {
                 value={el[podgroupName] ? el[podgroupName] : '9'}
               />
               {btn && (
-                <Button onClick={updateAllTeachersHandler} variant={'contained'}>
+                <Button onClick={() => updateAllTeachersHandler(i)} variant={'contained'}>
                   <BiCollection />
                 </Button>
               )}

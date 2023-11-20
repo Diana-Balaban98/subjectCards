@@ -19,8 +19,8 @@ export const fetchData = (): AppThunk => async (dispatch: Dispatch) => {
   }
 }
 
-const upgradeAllPodgroups = (podgroups: Subgroups[], newValue: string) => {
-  const podgroup = podgroups[0]
+const upgradeAllPodgroups = (podgroups: Subgroups[], newValue: string, index: number) => {
+  const podgroup = podgroups[index]
 
   for (const key in podgroup) {
     podgroup[key] = newValue
@@ -51,10 +51,10 @@ export const setIdTeacher = (
     type: 'SET-ID-TEACHER',
   }) as const
 
-export const updateAllTeachers = (idCard: string, teacherId: string, label: string) =>
+export const updateAllTeachers = (idCard: string, teacherId: string, indexPodgroup: number) =>
   ({
     idCard,
-    label,
+    indexPodgroup,
     teacherId,
     type: 'UPDATE-ALL-TEACHERS',
   }) as const
@@ -107,7 +107,11 @@ export const subjectInfoReducer = (state = SubjectState, action: CommonActions) 
             if (el.uniqueId === action.idCard) {
               return {
                 ...el,
-                podgroups: upgradeAllPodgroups(el.podgroups, action.teacherId),
+                podgroups: upgradeAllPodgroups(
+                  el.podgroups,
+                  action.teacherId,
+                  action.indexPodgroup
+                ),
               }
             }
 
