@@ -1,77 +1,11 @@
-import { TResponseData, TSubgroups, baseApi } from '@/api'
-import { AppThunk } from '@/state'
-import { Dispatch } from 'redux'
+import { TResponseData, TSubgroups } from '@/api'
+import { upgradeAllValueInObj } from '@/helpers'
+import { CommonActions } from '@/state'
 
 const SubjectState = {
   isLoading: false,
   subjectInfo: { data: [], teachers: [] } as TResponseData,
 }
-
-export const fetchData = (): AppThunk => async (dispatch: Dispatch) => {
-  dispatch(toggleIsLoading(true))
-  try {
-    const response = await baseApi.getSubjectData()
-
-    dispatch(setData(response))
-    dispatch(toggleIsLoading(false))
-  } catch (err) {
-    console.log(err)
-  }
-}
-
-const upgradeAllPodgroups = (podgroups: TSubgroups[], newValue: string, index: number) => {
-  const podgroup = podgroups[index]
-
-  for (const key in podgroup) {
-    podgroup[key] = newValue
-  }
-
-  return [podgroup, ...podgroups]
-}
-
-const setData = (data: TResponseData) => ({
-  data,
-  type: 'SET-DATA' as const,
-})
-
-export const toggleIsLoading = (isLoading: boolean) =>
-  ({ isLoading, type: 'TOGGLE-IS-LOADING' }) as const
-
-export const setIdTeacher = (
-  idCard: string,
-  teacherId: string,
-  podgroupName: string,
-  indexPodgroup: number
-) =>
-  ({
-    idCard,
-    indexPodgroup,
-    podgroupName,
-    teacherId,
-    type: 'SET-ID-TEACHER',
-  }) as const
-
-export const updateAllTeachers = (idCard: string, teacherId: string, indexPodgroup: number) =>
-  ({
-    idCard,
-    indexPodgroup,
-    teacherId,
-    type: 'UPDATE-ALL-TEACHERS',
-  }) as const
-
-export const removePodgroup = (idCard: string, indexPodgroup: number) =>
-  ({
-    idCard,
-    indexPodgroup,
-    type: 'REMOVE-PODGROUP',
-  }) as const
-
-type CommonActions =
-  | ReturnType<typeof removePodgroup>
-  | ReturnType<typeof setData>
-  | ReturnType<typeof setIdTeacher>
-  | ReturnType<typeof toggleIsLoading>
-  | ReturnType<typeof updateAllTeachers>
 
 export const subjectInfoReducer = (state = SubjectState, action: CommonActions) => {
   switch (action.type) {
@@ -117,7 +51,11 @@ export const subjectInfoReducer = (state = SubjectState, action: CommonActions) 
                 ...el,
                 podgroups: el.podgroups.map((subgroup, i) => {
                   if (i === action.indexPodgroup) {
-                    upgradeAllPodgroups(el.podgroups, action.teacherId, action.indexPodgroup)
+                    upgradeAllValueInObj<TSubgroups>(
+                      el.podgroups,
+                      action.teacherId,
+                      action.indexPodgroup
+                    )
                   }
 
                   return subgroup
@@ -147,6 +85,24 @@ export const subjectInfoReducer = (state = SubjectState, action: CommonActions) 
           }),
         },
       }
+    case 'UPDATE-ADDITIONAL-INFO': {
+      return {
+        ...state,
+        subjectInfo: {
+          ...state.subjectInfo,
+          data: state.subjectInfo.data.map(el => {
+            if (el.uniqueId === action.idCard) {
+              return {
+                ...el,
+                additionalInfo: action.newValue,
+              }
+            }
+
+            return el
+          }),
+        },
+      }
+    }
 
     default:
       return state

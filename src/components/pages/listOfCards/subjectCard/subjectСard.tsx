@@ -1,8 +1,9 @@
-import { FunctionComponent, useState } from 'react'
+import { ChangeEvent, FunctionComponent, KeyboardEvent, useState } from 'react'
 
 import { TSubjectInfo, Teachers } from '@/api'
 import {
   Button,
+  Input,
   Select,
   SubjectInfo,
   SubjectTitle,
@@ -15,7 +16,7 @@ import {
 } from '@/components'
 import { renderColumns } from '@/helpers'
 import { useAppDispatch } from '@/hooks'
-import { removePodgroup, setIdTeacher, updateAllTeachers } from '@/state'
+import { removePodgroup, setIdTeacher, updateAdditionalInfo, updateAllTeachers } from '@/state'
 import { BiCollection } from 'react-icons/bi'
 
 import s from './subjectCard.module.scss'
@@ -27,12 +28,23 @@ type SubjectCardProps = {
 
 export const SubjectСard: FunctionComponent<SubjectCardProps> = ({ card, teachers }) => {
   const [lectureTeacherValue, setLectureTeacherValue] = useState('')
+  const [additionalInfoValue, setAdditionalInfo] = useState(card.additionalInfo)
   const dispatch = useAppDispatch()
 
   const valuesForTeachers = [{ id: '9', name: 'Вакансия' }, ...teachers]
 
   const deletePodgroup = () => {
     dispatch(removePodgroup(card.uniqueId, 1))
+  }
+
+  const onChangeHandler = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setAdditionalInfo(e.currentTarget.value)
+  }
+
+  const onKeyDownHandler = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      dispatch(updateAdditionalInfo(card.uniqueId, additionalInfoValue))
+    }
   }
 
   const mappedColumns = renderColumns(card.countPodgroups, deletePodgroup)
@@ -42,51 +54,61 @@ export const SubjectСard: FunctionComponent<SubjectCardProps> = ({ card, teache
     countHours: string,
     selectEnabled: boolean,
     podgroupName: string,
-    isButton?: boolean
+    isSelect?: boolean,
+    isButton?: boolean,
+    isTextArea?: boolean,
+    isTextField?: boolean
   ) => {
     return (
       <TableRow>
         <TableCell>{title}</TableCell>
         <TableCell>{countHours}</TableCell>
         {card.podgroups.map((el, index) => {
-          //console.log(`${i} ${typeof el[podgroupsName]}`)
-
           const selectTeacherHandler = (valueId: string) => {
             if (podgroupName === 'lectureTeacher') {
               setLectureTeacherValue(valueId)
             }
             dispatch(setIdTeacher(card.uniqueId, valueId, podgroupName, index))
-            //  console.log(podgroupName, selectEnabled)
           }
 
-          const updateAllTeachersHandler = (indexPodgroup: number) => {
+          const updateAllTeachersHandler = (indexPodgroup: number) => () => {
+            console.log(title, countHours)
             dispatch(updateAllTeachers(card.uniqueId, lectureTeacherValue, indexPodgroup))
           }
 
           return (
             <TableCell key={`tableCell-${index}`}>
-              <Select
-                className={s.select}
-                disabled={selectEnabled}
-                onValueChange={selectTeacherHandler}
-                options={valuesForTeachers}
-                value={el[podgroupName] ? el[podgroupName] : valuesForTeachers[0].id}
-              />
-              {isButton && (
-                <Button onClick={() => updateAllTeachersHandler(index)} variant={'contained'}>
-                  <BiCollection />
-                </Button>
+              {isSelect && (
+                <>
+                  <Select
+                    className={s.select}
+                    disabled={selectEnabled}
+                    name={podgroupName}
+                    onValueChange={selectTeacherHandler}
+                    options={valuesForTeachers}
+                    value={el[podgroupName] ? el[podgroupName] : valuesForTeachers[0].id}
+                  />
+                  {isButton && (
+                    <Button onClick={updateAllTeachersHandler(index)} variant={'contained'}>
+                      <BiCollection />
+                    </Button>
+                  )}
+                </>
               )}
+              {isTextArea && (
+                <Textarea
+                  onChange={onChangeHandler}
+                  onKeyDown={onKeyDownHandler}
+                  value={additionalInfoValue}
+                />
+              )}
+              {isTextField && <Input type={'number'} value={el.countStudents} />}
             </TableCell>
           )
         })}
       </TableRow>
     )
   }
-
-  // const mappedDataForRenderTableRow = dataForRenderTableRow.map((d, i) => {
-  //   return renderTableRow(d.label, d.hours, !+d.hours, '', i === 0)
-  // })
 
   return (
     <div className={s.wrapperCard}>
@@ -106,36 +128,47 @@ export const SubjectСard: FunctionComponent<SubjectCardProps> = ({ card, teache
               card.lecturesHours,
               !Number(card.lecturesHours),
               'lectureTeacher',
-              true
+              true,
+              true,
+              false
             )}
             {renderTableRow(
               'Лабораторные работы',
               card.laboratoryHours,
               !Number(card.laboratoryHours),
-              'laboratoryTeacher'
+              'laboratoryTeacher',
+              true,
+              false
             )}
             {renderTableRow(
               'Практические',
               card.practicHours,
               !Number(card.practicHours),
-              'practiceTeacher'
+              'practiceTeacher',
+              true
             )}
             {renderTableRow(
               'Семинарские',
               card.seminarHours,
               !Number(card.seminarHours),
-              'seminarTeacher'
+              'seminarTeacher',
+              true
             )}
-            {card.offset && renderTableRow('Зачёт', '', false, 'offsetTeacher')}
-            {card.exam && renderTableRow('Экзамен', '', false, 'examTeacher')}
+            {card.offset && renderTableRow('Зачёт', '', false, 'offsetTeacher', true)}
+            {card.exam && renderTableRow('Экзамен', '', false, 'examTeacher', true)}
+            {Number(card.countPodgroups) > 1 &&
+              renderTableRow('Количество человек', '', false, '', false, false, false, true)}
+            {renderTableRow(
+              'Примечание (для составления примечания)',
+              '',
+              false,
+              '',
+              false,
+              false,
+              true,
+              false
+            )}
             {/*{mappedDataForRenderTableRow}*/}
-            <TableRow>
-              <TableCell>Примечание (для составления примечания)</TableCell>
-              <TableCell></TableCell>
-              <TableCell>
-                <Textarea value={card.additionalInfo && card.additionalInfo} />
-              </TableCell>
-            </TableRow>
           </>
         </TableBody>
       </Table>
