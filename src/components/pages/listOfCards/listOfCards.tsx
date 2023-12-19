@@ -1,10 +1,11 @@
-import { Button, LinearLoader, SubjectСard } from '@/components'
-import { useAppSelector } from '@/hooks'
+import {Button, LinearLoader, SubjectСard} from '@/components'
+import {useAppSelector} from '@/hooks'
 
 import s from './listOfCards.module.scss'
 
+
 export const ListOfCards = () => {
-  const { isLoading, subjectInfo } = useAppSelector(state => state.subjectInfo)
+    const { isLoading, subjectInfo } = useAppSelector(state => state.subjectInfo)
 
   if (isLoading) {
     return <LinearLoader />

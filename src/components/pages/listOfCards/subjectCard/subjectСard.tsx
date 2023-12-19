@@ -72,7 +72,6 @@ export const SubjectСard: FunctionComponent<SubjectCardProps> = ({ card, teache
           }
 
           const updateAllTeachersHandler = (indexPodgroup: number) => () => {
-            console.log(title, countHours)
             dispatch(updateAllTeachers(card.uniqueId, lectureTeacherValue, indexPodgroup))
           }
 

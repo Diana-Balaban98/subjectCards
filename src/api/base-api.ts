@@ -1,4 +1,4 @@
-import { TResponseData } from '@/api/types.ts'
+import {TResponseData, TSubjectInfo} from '@/api/types.ts'
 import axios from 'axios'
 
 export const baseApi = {
@@ -7,4 +7,9 @@ export const baseApi = {
 
     return result.data
   },
+  async createSubjectData(data: TSubjectInfo[]) {
+    const result = await axios.patch<TSubjectInfo[]>('https://bgaa.by/test_result', data)
+
+    return result.data
+  }
 }
